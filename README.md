@@ -1,6 +1,6 @@
 # vraelis
 
-**Alpha (0.1.0).** No outside user has run it yet. Interfaces and lockfile formats may change.
+**Alpha (0.1.1).** No outside user has run it yet. Interfaces and lockfile formats may change.
 
 `vraelis` keeps a lockfile of exactly what you approved, then tells you later whether it is still the same. It runs
 offline, uses only the Python standard library, never loads a model and never launches anything.
@@ -24,8 +24,8 @@ Python 3.11 or newer. Not on PyPI yet: install the wheel from the
 from the same release.
 
 ```
-pip install https://github.com/sansxelt/vraelis-cli/releases/download/v0.1.0/vraelis-0.1.0-py3-none-any.whl
-pip install "vraelis[signature] @ https://github.com/sansxelt/vraelis-cli/releases/download/v0.1.0/vraelis-0.1.0-py3-none-any.whl"   # adds model-signing 1.1.1 for the optional signature check
+pip install https://github.com/sansxelt/vraelis-cli/releases/download/v0.1.1/vraelis-0.1.1-py3-none-any.whl
+pip install "vraelis[signature] @ https://github.com/sansxelt/vraelis-cli/releases/download/v0.1.1/vraelis-0.1.1-py3-none-any.whl"   # adds model-signing 1.1.1 for the optional signature check
 ```
 
 ## Use
@@ -69,11 +69,19 @@ containing its own `vraelis` package could run code before vraelis starts.
 - Records file names, sizes and digests only.
 - A file named like a secrets file (`.env`, keys, `id_rsa`, `.npmrc`, ...) is recorded as present only. It is never
   digested or measured.
+  - Its content is therefore not checked. `lock`, `verify` and `diff` list such files under "Not checked (presence
+    only)".
 
 **`vraelis agents`**
 - Never records env or header values unless you pin them. Pinned values are stored in plain text, by your choice.
-- Local files kept out of version control (`.claude/settings.local.json`, user-level `--config` files) are recorded as
-  structure only.
+- Some files are recorded as structure only:
+  - `.claude/settings.local.json`;
+  - user-level `--config` files;
+  - any project config or settings file that the project's own ignore rules exclude.
+- Structure only means keys, booleans, numbers, env and header names, and values you pinned.
+- The ignore rules it reads are `.git/info/exclude` and the `.gitignore` files inside the project. It never runs git,
+  and it does not read ignore rules above the project folder or git's global excludes file. A file excluded only by
+  those rules is treated as shared.
 - In shared project files, credentials it recognises are redacted on a best-effort basis. **Read a lockfile before you
   commit or share it.**
 

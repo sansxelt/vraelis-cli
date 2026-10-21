@@ -16,7 +16,7 @@ SKIP_DIRS = {".git", ".hg", ".svn", "__pycache__"}
 SIG_SUFFIXES = (".sigstore.json", ".sigstore", ".sig", ".bundle", ".intoto.jsonl")
 
 PROVES = [
-    "Whether the files in this folder are byte-identical to the files recorded in the lockfile",
+    "Whether every digested file in this folder is byte-identical to the lockfile (files listed under 'Not checked' are checked for presence only)",
     "Which files changed, went missing or were added since the lock",
     "What the bundled structural checks found (safetensors, GGUF, shard indexes, JSON, LFS pointers)",
 ]
@@ -25,6 +25,7 @@ DOES_NOT_PROVE = [
     "Which model a server or device actually loads or runs",
     "Who published the files: signature files are detected by name but not verified (use model_signing for that)",
     "That files the checker reports UNSUPPORTED are structurally sound",
+    "Anything about the content of files listed under 'Not checked' (secrets-file names: presence only, never digested)",
 ]
 
 
@@ -208,13 +209,14 @@ def verify(root, lock_path=None):
 def diff(lock_a, lock_b):
     """Compare two lockfiles (e.g. the approved release and a new upload under the same name)."""
     a, b = read_lock(lock_a), read_lock(lock_b)
-    out = []
+    out, gaps = [], []  # r9 (Codex ML-PUB-01): presence-only comparisons are reported, never silent
     for rel in sorted(set(a["files"]) | set(b["files"])):
         x, y = a["files"].get(rel), b["files"].get(rel)
         if x is None: out.append({"file": rel, "change": "added"})
         elif y is None: out.append({"file": rel, "change": "removed"})
         elif x == NOT_DIGESTED or y == NOT_DIGESTED:
             if x != y: out.append({"file": rel, "change": "changed"})
+            else: gaps.append(f"{rel}: looks like a secrets file; only its presence is compared, not its content")
         elif x["sha256"] != y["sha256"] or x["size"] != y["size"]:
             out.append({"file": rel, "change": "changed", "a_sha256": x["sha256"], "b_sha256": y["sha256"]})
-    return {"verdict": "CHANGED" if out else "UNCHANGED", "changes": out}
+    return {"verdict": "CHANGED" if out else "UNCHANGED", "changes": out, "coverage_gaps": gaps}

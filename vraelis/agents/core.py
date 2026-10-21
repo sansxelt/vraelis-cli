@@ -18,7 +18,7 @@ exact-version pins only (L6); names and keys scrubbed (L1); an empty project can
 """
 import hashlib, json, math, os, re, shlex, tempfile
 
-from . import paths
+from . import ignore, paths
 from .redact import REDACTED, SECRET_NAME, scrub, scrub_args, scrub_command, program_of
 
 SCHEMA = "addonlock/5"  # r5: text_sha256 for text files (line-ending-normalised digest)
@@ -55,6 +55,7 @@ DOES_NOT_PROVE = [
     "Changes inside redacted values, unpinned env or header values, or anything listed under 'Not covered'",
     "That every secret was recognised: redaction is best effort; read a lockfile before committing it",
     "Anything in user-level configuration not passed with --config",
+    "Which files git tracks: a project config is treated as shared unless the project's own ignore rules exclude it (ignore rules above the project folder and git's global excludes are not read)",
 ]
 
 
@@ -182,10 +183,16 @@ def _names(d, gaps, where):
     return sorted(out)
 
 
+class _EnvRecord(dict):
+    """r8 (Codex AL-PUB-01): an env/headers record this tool generated. Structure-only masking keeps exactly these
+    (names, and values the user pinned explicitly); a raw config key that happens to be called `names` or
+    `pinned_values` is ordinary data and is masked like any other value."""
+
+
 def _pinned(d, kind, pins, gaps, where):
     """Names-only record of an env or headers object, plus plain-text values for pinned names, plus a gap naming the
     values that are not recorded (r4, M4/M5)."""
-    rec = {"names": _names(d, gaps, where)}
+    rec = _EnvRecord(names=_names(d, gaps, where))
     vals = {str(k): str(v) for k, v in sorted(d.items(), key=lambda kv: str(kv[0])) if str(k) in pins}
     if vals: rec["pinned_values"] = vals
     if any(str(k) not in pins for k in d):
@@ -551,12 +558,32 @@ def _structure_only(v, key=None):
     """r7 redaction policy for the PUBLIC tool (founder: decide per product): a lockfile must never make a value more
     public than the file it came from. Files normally kept out of version control (settings.local.json, user-level
     --config files outside the project) are recorded as structure only: keys, booleans, numbers and null are kept,
-    every string becomes LOCAL_MARK. Env/header names and values the user explicitly pinned are kept."""
-    if key in ("names", "pinned_values"): return v
-    if isinstance(v, dict): return {k: _structure_only(x, k) for k, x in v.items()}
-    if isinstance(v, list): return [_structure_only(x, key) for x in v]
+    every string becomes LOCAL_MARK. Env/header names and values the user explicitly pinned are kept: r8 (Codex
+    AL-PUB-01) recognises them by provenance (_EnvRecord), never by key name.
+    r8 (Codex AL-PUB-02): a project config or settings file the project's own ignore rules exclude is local too."""
+    if isinstance(v, _EnvRecord): return v
+    if isinstance(v, dict): return {k: _structure_only(x) for k, x in v.items()}
+    if isinstance(v, list): return [_structure_only(x) for x in v]
     if isinstance(v, str): return LOCAL_MARK
     return v
+
+
+def _ignore_read(root, rel):
+    try: real = _resolve_no_links(root, rel, rel)
+    except CantVerify: return ignore.UNKNOWN
+    if real is None: return ""
+    try: return _read_text(real, rel)
+    except CantVerify: return ignore.UNKNOWN
+
+
+def _private_reason(root, rel):
+    """None if the project's own ignore rules leave `rel` shared; otherwise the gap text explaining why its values are
+    not recorded (r8, Codex AL-PUB-02)."""
+    st = ignore.ignored(rel, lambda r: _ignore_read(root, r), os.path.isdir(os.path.join(root, ".git")))
+    if st is ignore.UNKNOWN:
+        return f"{rel}: the project's ignore rules could not be read safely, so it is treated as private; only its structure is recorded, not its values (changes to values are not detected)"
+    if st: return f"{rel}: excluded from version control by the project's ignore rules; only its structure is recorded, not its values (changes to values are not detected)"
+    return None
 
 
 def snapshot(root, extra_configs=(), pin_env=(), pin_header=(), missing_ok=False):
@@ -586,6 +613,9 @@ def snapshot(root, extra_configs=(), pin_env=(), pin_header=(), missing_ok=False
         other = {k: v for k, v in doc.items() if k not in ("mcpServers", "servers")}
         local = kind == "abs"
         if local: gaps.append(f"{label}: a user-level file outside the project; only its structure is recorded, not its values (changes to values are not detected)")
+        else:
+            why = _private_reason(root, label)
+            if why: local = True; gaps.append(why)
         shape = _structure_only if local else (lambda x: x)
         meta[label] = {"key": used_key, "other": shape(record_value(other, gaps, f"{label}", pins=pins))}
         recs = {}
@@ -606,6 +636,9 @@ def snapshot(root, extra_configs=(), pin_env=(), pin_header=(), missing_ok=False
         if rel in LOCAL_SETTINGS:  # r7: kept out of version control, so its values never enter a lockfile
             settings[rel] = _structure_only(settings[rel])
             gaps.append(f"{rel}: a local file kept out of version control; only its structure is recorded, not its values (changes to values are not detected)")
+        else:
+            why = _private_reason(root, rel)
+            if why: settings[rel] = _structure_only(settings[rel]); gaps.append(why)
         for cmd in _settings_commands(doc):
             _launched(root, split_words(cmd), None, gaps, rel, launched)
     instr = _instruction_files(root, gaps)

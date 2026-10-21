@@ -502,5 +502,31 @@ class SecretsFilesR8(unittest.TestCase):
         r = core.verify(self.d, self.lp); self.assertEqual([c["change"] for c in r["changes"]], ["missing"])
 
 
+class NotCheckedShownR9(SecretsFilesR8):
+    """r9 (Codex ML-PUB-01): presence-only files appear in normal output, and the byte-identity claim is qualified."""
+    def test_verify_human_output_lists_presence_only_files(self):
+        open(os.path.join(self.d, ".env"), "wb").write(b"HF_TOKEN=changed")
+        code, out, _ = run("verify", self.d, "--lockfile", self.lp)
+        self.assertEqual(code, 0); self.assertIn("Not checked (presence only):", out)
+        self.assertIn(".env", out.split("Not checked")[1]); self.assertIn("id_rsa", out.split("Not checked")[1])
+        self.assertNotIn("Whether the files in this folder are byte-identical", out)
+        self.assertIn("Whether every digested file in this folder is byte-identical", out)
+
+    def test_lock_human_output_lists_presence_only_files(self):
+        out_lp = self.lp + ".2"; self.addCleanup(lambda: os.path.exists(out_lp) and os.remove(out_lp))
+        code, out, _ = run("lock", self.d, "--out", out_lp)
+        self.assertEqual(code, 0); self.assertIn("Not checked (presence only):", out); self.assertIn(".env", out)
+
+    def test_diff_reports_presence_only_gap(self):
+        r = core.diff(self.lp, self.lp); self.assertEqual(r["verdict"], "UNCHANGED")
+        self.assertEqual(sorted(g.split(":")[0] for g in r["coverage_gaps"]), [".env", "id_rsa"])
+        code, out, _ = run("diff", self.lp, self.lp); self.assertEqual(code, 0); self.assertIn("Not checked (presence only):", out)
+
+    def test_no_gap_section_without_secret_files(self):
+        d = tempfile.mkdtemp(); self.addCleanup(shutil.rmtree, d, True)
+        open(os.path.join(d, "model.safetensors"), "wb").write(b"x"); run("lock", d)
+        code, out, _ = run("verify", d); self.assertEqual(code, 0); self.assertNotIn("Not checked (presence only):", out)
+
+
 if __name__ == "__main__":
     unittest.main()

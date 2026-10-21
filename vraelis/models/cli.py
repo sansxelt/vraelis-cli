@@ -14,6 +14,13 @@ def _print_card(card):
     for x in card["does_not_prove"]: print(f"  - {x}")
 
 
+def _print_not_checked(gaps):
+    """r9 (Codex ML-PUB-01): files compared for presence only are listed in normal output, not only in --json."""
+    if gaps:
+        print("\nNot checked (presence only):")
+        for g in gaps: print(f"  {g}")
+
+
 def _print_findings(res):
     if res.get("findings"):
         print("\nFormat findings:")
@@ -62,6 +69,7 @@ def main(argv=None):
         if a.json: print(json.dumps({"locked": True, "lockfile": path, "files": len(doc["files"]), "findings": doc["findings_at_lock"]}, indent=1))
         else:
             print(f"Locked {len(doc['files'])} files -> {path}")
+            _print_not_checked([f"{rel}: looks like a secrets file; recorded as present only, never digested" for rel, e in sorted(doc["files"].items()) if e == core.NOT_DIGESTED])
             _print_findings({"findings": doc["findings_at_lock"], "notices": doc["notices_at_lock"]})
             if doc["signature_candidates"]:
                 print(f"\nSignature files present (not verified): {', '.join(doc['signature_candidates'])}")
@@ -74,6 +82,7 @@ def main(argv=None):
             print(LABEL[res["verdict"]])
             if res["verdict"] == "CANT_VERIFY": print(f"  {res['reason']}")
             for c in res["changes"]: print(f"  {c['change']:<8} {c['file']}")
+            _print_not_checked(res.get("coverage_gaps", []))
             _print_findings(res)
             _print_card(res["card"])
         return EXIT[res["verdict"]]
@@ -95,6 +104,7 @@ def main(argv=None):
     else:
         print(LABEL[res["verdict"]])
         for c in res["changes"]: print(f"  {c['change']:<8} {c['file']}")
+        _print_not_checked(res.get("coverage_gaps", []))
     return EXIT[res["verdict"]]
 
 
