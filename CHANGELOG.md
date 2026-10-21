@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.1.2 (2026-10-21)
+
+These are privacy fixes in `vraelis agents` from an independent AI review of 0.1.1. No real credential exposure was
+demonstrated.
+
+- **Ignore rules git honours could be missed.** In 0.1.1 the reader of a project's own ignore rules missed POSIX
+  classes. For example, `[[:punct:]]mcp.json` or `.[[:alpha:]]cp.json` make git ignore `.mcp.json`, but 0.1.1 treated
+  the file as shared and recorded its values.
+  - The matcher now follows git's own matching rules: brackets, POSIX classes, and when `**` spans folders.
+  - Any pattern it cannot parse makes the file count as private.
+- **Case-insensitive repositories.** Git ignores case on Windows and macOS repositories by default, so `.MCP.json`
+  also ignores `.mcp.json` there. The repository's setting is not read, so a file now counts as ignored if git would
+  ignore it under either setting.
+- The matcher is checked against `git check-ignore` on a corpus that includes these cases. The check fails on any
+  disagreement.
+
 ## 0.1.1 (2026-10-21)
 
 These are privacy and reporting fixes from an independent AI review of 0.1.0. No real credential exposure was

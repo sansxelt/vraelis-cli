@@ -21,6 +21,8 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: unit tests
         run: python -P -m unittest discover -s tests -v
+      - name: ignore rules agree with git check-ignore
+        run: python -I tests/ignore_vs_git.py --quick
       - name: build and install the wheel, then smoke-test the installed command
         shell: bash
         run: |

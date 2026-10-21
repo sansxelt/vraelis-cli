@@ -1,6 +1,6 @@
 # vraelis
 
-**Alpha (0.1.1).** No outside user has run it yet. Interfaces and lockfile formats may change.
+**Alpha (0.1.2).** No outside user has run it yet. Interfaces and lockfile formats may change.
 
 `vraelis` keeps a lockfile of exactly what you approved, then tells you later whether it is still the same. It runs
 offline, uses only the Python standard library, never loads a model and never launches anything.
@@ -24,8 +24,8 @@ Python 3.11 or newer. Not on PyPI yet: install the wheel from the
 from the same release.
 
 ```
-pip install https://github.com/sansxelt/vraelis-cli/releases/download/v0.1.1/vraelis-0.1.1-py3-none-any.whl
-pip install "vraelis[signature] @ https://github.com/sansxelt/vraelis-cli/releases/download/v0.1.1/vraelis-0.1.1-py3-none-any.whl"   # adds model-signing 1.1.1 for the optional signature check
+pip install https://github.com/sansxelt/vraelis-cli/releases/download/v0.1.2/vraelis-0.1.2-py3-none-any.whl
+pip install "vraelis[signature] @ https://github.com/sansxelt/vraelis-cli/releases/download/v0.1.2/vraelis-0.1.2-py3-none-any.whl"   # adds model-signing 1.1.1 for the optional signature check
 ```
 
 ## Use
@@ -82,6 +82,9 @@ containing its own `vraelis` package could run code before vraelis starts.
 - The ignore rules it reads are `.git/info/exclude` and the `.gitignore` files inside the project. It never runs git,
   and it does not read ignore rules above the project folder or git's global excludes file. A file excluded only by
   those rules is treated as shared.
+- Patterns follow git's own matching rules, including classes such as `[[:punct:]]`.
+  - A file counts as ignored if git would ignore it with either case-sensitive or case-insensitive matching.
+  - Any pattern it cannot parse makes the file count as private.
 - In shared project files, credentials it recognises are redacted on a best-effort basis. **Read a lockfile before you
   commit or share it.**
 

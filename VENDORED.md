@@ -3,7 +3,7 @@
 The two subpackages were developed as separate tools (`modellock`, `addonlock`) in a private repository and are vendored here. Source commits are listed so the record is fixed; the source repository itself is not public.
 
 `vraelis/models/` is Model Lock at 8c4dec3bcf8a657b4989f81b7dd8fabb0e84a450, package `modellock/`.
-`vraelis/agents/` is Add-on Lock at ac046f34ecaa7d52b22a5b2b88676d4ffce1bec9, package `addonlock/`.
+`vraelis/agents/` is Add-on Lock at 02b0edfad17d2e0c29dc1c69b4fe060c00710460, package `addonlock/`.
 Each package's `__main__.py` is not vendored (the top-level `vraelis/__main__.py` replaces both).
 The only change to vendored code is the argparse `prog` string in each `cli.py` ("modellock" -> "vraelis models",
 "addonlock" -> "vraelis agents"). Lockfile file names (modellock.json, addonlock.json) are unchanged.
@@ -19,6 +19,6 @@ The only change to vendored code is the argparse `prog` string in each `cli.py` 
 | vraelis/agents/__init__.py | addonlock/__init__.py | 520b32fd9810cfb67d394c4037c05dd9101bb5f805807b9cef5d3d8139068463 | 520b32fd9810cfb67d394c4037c05dd9101bb5f805807b9cef5d3d8139068463 | yes |
 | vraelis/agents/cli.py | addonlock/cli.py | e9cf9c22829e89671ae88d4dcdf1bf162ae93a90a279a646fb1ba685d6273d65 | 2844f0fb47332fd83b8bf95afba8fa9a5f3e4256a88c0cb512ae4556e51b4c28 | no (prog string) |
 | vraelis/agents/core.py | addonlock/core.py | a50d03523fadd83f884d6822ae1490cdef9019e7b6f9b7ab6affd2f391eb04bf | a50d03523fadd83f884d6822ae1490cdef9019e7b6f9b7ab6affd2f391eb04bf | yes |
-| vraelis/agents/ignore.py | addonlock/ignore.py | 078d377ab454995a51cc16808fc29714d32ac6cf8b4351b80cbd57fb2f5e5f47 | 078d377ab454995a51cc16808fc29714d32ac6cf8b4351b80cbd57fb2f5e5f47 | yes |
+| vraelis/agents/ignore.py | addonlock/ignore.py | 563fb096b155f8d673e22c92f0c40d4c2a37b07e4f9c29329830acff4a6638aa | 563fb096b155f8d673e22c92f0c40d4c2a37b07e4f9c29329830acff4a6638aa | yes |
 | vraelis/agents/paths.py | addonlock/paths.py | cab1a0eb31ff3ecc9962ac85a767fce35bf91a8b17cfea90b45f9c2b79015bbf | cab1a0eb31ff3ecc9962ac85a767fce35bf91a8b17cfea90b45f9c2b79015bbf | yes |
 | vraelis/agents/redact.py | addonlock/redact.py | 0f5d4377d80010531292aa621aded5de89ad1e9b9113b46ebb92fe84f623e460 | 0f5d4377d80010531292aa621aded5de89ad1e9b9113b46ebb92fe84f623e460 | yes |
