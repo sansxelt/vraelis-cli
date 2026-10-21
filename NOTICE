@@ -1,0 +1,11 @@
+vraelis
+Copyright 2026 Nishanth Dasari
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+NOT A SECURITY ASSESSMENT. vraelis reports whether files and configuration match a lockfile you created, what its
+structural checks found, and what it could not check. It does not show that a model, an add-on, a server or any code
+is safe, correct, non-malicious or fit for any purpose, and it does not show which model or code a device or runtime
+actually loads. Every result lists what it shows and what it does not. Redaction of secrets in `vraelis agents`
+lockfiles is best effort for shared project files: read a lockfile before you commit or share it. The software is
+provided "AS IS", without warranties or conditions of any kind (see sections 7 and 8 of the licence).
