@@ -1,6 +1,6 @@
-# vraelis
+# Vraelis Prompto
 
-**Alpha (0.1.2).** No outside user has run it yet. Interfaces and lockfile formats may change.
+**Alpha (0.1.2).** Product page: [vraelis.com/prompto](https://vraelis.com/prompto). The command is `vraelis`. No outside user has run it yet. Interfaces and lockfile formats may change.
 
 `vraelis` keeps a lockfile of exactly what you approved, then tells you later whether it is still the same. It runs
 offline, uses only the Python standard library, never loads a model and never launches anything.
@@ -17,7 +17,21 @@ offline, uses only the Python standard library, never loads a model and never la
 Every result is one of **Unchanged**, **Changed** or **Can't verify**, and says what it shows and what it does not.
 Nothing here is a security assessment (see NOTICE).
 
-## Install
+## Download
+
+Standalone executables, no Python needed (unsigned for now, so Windows and macOS warn on first run). Check each file
+against `SHA256SUMS-downloads` from the same release.
+
+| System | File |
+|---|---|
+| Windows (x64) | [vraelis-0.1.2-windows-x64.exe](https://github.com/sansxelt/vraelis-cli/releases/download/v0.1.2/vraelis-0.1.2-windows-x64.exe) |
+| macOS (Apple silicon) | [vraelis-0.1.2-macos-arm64.tar.gz](https://github.com/sansxelt/vraelis-cli/releases/download/v0.1.2/vraelis-0.1.2-macos-arm64.tar.gz) |
+| macOS (Intel) | [vraelis-0.1.2-macos-x64.tar.gz](https://github.com/sansxelt/vraelis-cli/releases/download/v0.1.2/vraelis-0.1.2-macos-x64.tar.gz) |
+| Linux (x64) | [vraelis-0.1.2-linux-x64.tar.gz](https://github.com/sansxelt/vraelis-cli/releases/download/v0.1.2/vraelis-0.1.2-linux-x64.tar.gz) |
+
+They are built from the release's source by `.github/workflows/downloads.yml` and smoke-tested before they are attached.
+
+## Install with pip
 
 Python 3.11 or newer. Not on PyPI yet: install the wheel from the
 [latest GitHub release](https://github.com/sansxelt/vraelis-cli/releases/latest) and check it against `SHA256SUMS`
