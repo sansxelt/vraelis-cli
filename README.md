@@ -24,7 +24,7 @@ against `SHA256SUMS-downloads` from the same release.
 
 | System | File |
 |---|---|
-| Windows (x64) | [vraelis-0.1.2-windows-x64.exe](https://github.com/sansxelt/vraelis-cli/releases/download/v0.1.2/vraelis-0.1.2-windows-x64.exe) |
+| Windows (x64) | Windows downloads are temporarily unavailable while we investigate an antivirus detection. |
 | macOS (Apple silicon) | [vraelis-0.1.2-macos-arm64.tar.gz](https://github.com/sansxelt/vraelis-cli/releases/download/v0.1.2/vraelis-0.1.2-macos-arm64.tar.gz) |
 | macOS (Intel) | [vraelis-0.1.2-macos-x64.tar.gz](https://github.com/sansxelt/vraelis-cli/releases/download/v0.1.2/vraelis-0.1.2-macos-x64.tar.gz) |
 | Linux (x64) | [vraelis-0.1.2-linux-x64.tar.gz](https://github.com/sansxelt/vraelis-cli/releases/download/v0.1.2/vraelis-0.1.2-linux-x64.tar.gz) |
