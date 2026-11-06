@@ -44,7 +44,10 @@ class AccountTests(unittest.TestCase):
     @unittest.skipUnless(os.name == "nt", "Windows DPAPI")
     def test_windows_encrypted_store(self):
         with tempfile.TemporaryDirectory() as d:
-            store=a.Credentials(Path(d).resolve()/'private');store.save(TOKEN)
+            store=a.Credentials(Path(d).resolve()/'private')
+            try:store.save(TOKEN)
+            except a.AccountError as error:
+                print('::error::'+str(error));raise
             self.assertNotIn(TOKEN.encode(),store.path.read_bytes());self.assertEqual(store.load(),TOKEN);store.clear()
     def test_token_not_echoed(self):
         with self.assertRaises(a.AccountError) as e:a.AccountClient('secret-value')
