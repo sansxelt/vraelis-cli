@@ -23,20 +23,20 @@ class AccountTests(unittest.TestCase):
     @unittest.skipIf(os.name == "nt", "POSIX permissions")
     def test_private_atomic_store(self):
         with tempfile.TemporaryDirectory() as d:
-            s=a.Credentials(Path(d)/'private');s.save(TOKEN);self.assertEqual(s.load(),TOKEN)
+            s=a.Credentials(Path(d).resolve()/'private');s.save(TOKEN);self.assertEqual(s.load(),TOKEN)
             self.assertEqual(stat.S_IMODE(s.path.stat().st_mode),0o600)
             self.assertEqual(stat.S_IMODE(s.directory.stat().st_mode),0o700)
             s.clear();self.assertIsNone(s.load())
     @unittest.skipIf(os.name == "nt", "POSIX symlink")
     def test_link_rejected(self):
         with tempfile.TemporaryDirectory() as d:
-            target=Path(d)/'target';target.write_text('unchanged');s=a.Credentials(Path(d)/'private');s._directory();s.path.symlink_to(target)
+            target=Path(d).resolve()/'target';target.write_text('unchanged');s=a.Credentials(Path(d).resolve()/'private');s._directory();s.path.symlink_to(target)
             with self.assertRaises(a.AccountError):s.save(TOKEN)
             self.assertEqual(target.read_text(),'unchanged')
     @unittest.skipIf(os.name == "nt", "POSIX permissions")
     def test_public_credentials_rejected(self):
         with tempfile.TemporaryDirectory() as d:
-            s=a.Credentials(Path(d)/'private');s.save(TOKEN);s.path.chmod(0o644)
+            s=a.Credentials(Path(d).resolve()/'private');s.save(TOKEN);s.path.chmod(0o644)
             with self.assertRaises(a.AccountError):s.load()
     def test_terminal_output(self):
         self.assertEqual(a.terminal_text('hello\x1b[31m red\x1b[0m\x1b]52;c;secret\x07!'), 'hello red!')
@@ -44,7 +44,7 @@ class AccountTests(unittest.TestCase):
     @unittest.skipUnless(os.name == "nt", "Windows DPAPI")
     def test_windows_encrypted_store(self):
         with tempfile.TemporaryDirectory() as d:
-            store=a.Credentials(Path(d)/'private');store.save(TOKEN)
+            store=a.Credentials(Path(d).resolve()/'private');store.save(TOKEN)
             self.assertNotIn(TOKEN.encode(),store.path.read_bytes());self.assertEqual(store.load(),TOKEN);store.clear()
     def test_token_not_echoed(self):
         with self.assertRaises(a.AccountError) as e:a.AccountClient('secret-value')
