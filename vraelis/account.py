@@ -131,7 +131,7 @@ def _dpapi(raw, decrypt=False):
     fn.argtypes = [ctypes.POINTER(Blob), ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, wintypes.DWORD, ctypes.POINTER(Blob)]
     fn.restype = wintypes.BOOL
     if not fn(ctypes.byref(src), None, None, None, None, 1, ctypes.byref(out)):
-        raise AccountError('Windows could not protect or read your credentials.')
+        raise AccountError(f'Windows could not protect or read your credentials (error {ctypes.windll.kernel32.GetLastError()}).')
     try: return ctypes.string_at(out.data, out.size)
     finally:
         ctypes.windll.kernel32.LocalFree.argtypes = [ctypes.c_void_p]
