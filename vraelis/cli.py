@@ -8,12 +8,18 @@ import sys
 
 from . import __version__
 
-USAGE = """usage: vraelis {models,agents} ...
+USAGE = """usage: vraelis {models,agents,login,logout,account} ...
 
   vraelis models lock|verify|diff|signature   pin and verify the exact bytes of an AI model folder (offline;
                                               `signature` is optional and contacts Sigstore)
   vraelis agents lock|verify|diff             pin and verify an AI coding agent's add-on configuration (offline;
                                               never launches anything)
+
+  vraelis login [--no-browser]                 approve this CLI in your browser
+  vraelis logout                              revoke this CLI session
+  vraelis account status [--json]              view your account and current plan
+  vraelis account billing                     open billing in your browser
+  vraelis assistant "question"                 ask with your account (Premium+)
 
 Exit codes: 0 unchanged, 1 changed, 2 can't verify, 3 lock refused. Results say what they show and what they do not;
 nothing here is a security assessment. Run `vraelis models -h` or `vraelis agents -h` for details."""
@@ -26,6 +32,9 @@ def main(argv=None):
     if argv[0] == "--version":
         print(f"vraelis {__version__}"); return 0
     tool, rest = argv[0], argv[1:]
+    if tool in ("login", "logout", "account", "assistant"):
+        from . import account
+        return account.main(rest if tool == "account" else ["ask" if tool == "assistant" else tool, *rest])
     if tool == "models":
         from .models import cli as models_cli
         return models_cli.main(rest)

@@ -154,3 +154,12 @@ Testing was self-run, not independent, and no outside user has run it yet.
 - Report a security issue privately as described in [SECURITY.md](SECURITY.md).
 
 Licence: Apache-2.0 (LICENSE, NOTICE).
+
+
+## Account access (0.1.3 source candidate)
+
+`vraelis login` opens browser approval; `vraelis login --no-browser` prints the approval address. Then use `vraelis account status`, `vraelis account billing`, or `vraelis assistant "Summarize my records"`. `vraelis logout` revokes the session. These commands work in CMD, PowerShell, and Unix shells when the installed command is available.
+
+Assistant requests require Premium or higher and available usage. They are temporary and cannot open saved conversations or execute proposals. Review actions in the web app. Billing opens browser settings; confirm the browser uses the same account. Offline lock/verify/diff commands still require no account.
+
+Windows stores the session encrypted with user-bound DPAPI; Unix uses an owner-only credential file. An optional `VRAELIS_TOKEN` overrides saved credentials without replacing them. Never put tokens in command arguments or logs. This source candidate is not a restored Windows download.

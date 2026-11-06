@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.3 (source candidate)
+
+- Browser-approved CLI sign-in, account status, plan access, logout and billing settings link.
+- Temporary assistant questions with server-enforced native plan limits; no saved-thread or automatic action execution.
+- Windows credentials encrypted with user-bound DPAPI; private credential files on Unix.
+- Existing offline model and agent commands remain available without sign-in.
+- This source update does not restore withdrawn Windows downloads.
+
 ## 0.1.2 (2026-10-21)
 
 These are privacy fixes in `vraelis agents` from an independent AI review of 0.1.1. No real credential exposure was
