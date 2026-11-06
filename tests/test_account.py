@@ -45,10 +45,10 @@ class AccountTests(unittest.TestCase):
     def test_windows_encrypted_store(self):
         with tempfile.TemporaryDirectory() as d:
             store=a.Credentials(Path(d).resolve()/'private')
-            try:store.save(TOKEN)
-            except a.AccountError as error:
-                print('::error::'+str(error));raise
-            self.assertNotIn(TOKEN.encode(),store.path.read_bytes());self.assertEqual(store.load(),TOKEN);store.clear()
+            for _ in range(8):
+                store.save(TOKEN)
+                self.assertNotIn(TOKEN.encode(),store.path.read_bytes());self.assertEqual(store.load(),TOKEN)
+            store.clear()
     def test_token_not_echoed(self):
         with self.assertRaises(a.AccountError) as e:a.AccountClient('secret-value')
         self.assertNotIn('secret-value',str(e.exception))

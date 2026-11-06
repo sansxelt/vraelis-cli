@@ -156,7 +156,7 @@ class Credentials:
     def load(self):
         if not self.path.exists() and not self.path.is_symlink(): return None
         self._directory()
-        fd = os.open(self.path, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0))
+        fd = os.open(self.path, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_BINARY', 0))
         try:
             st = os.fstat(fd)
             if not stat.S_ISREG(st.st_mode) or st.st_size > 16384 or (getattr(st, 'st_file_attributes', 0) & 0x400):
