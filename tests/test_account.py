@@ -118,3 +118,29 @@ class UsageTests(unittest.TestCase):
         self.assertEqual(json.loads(out.getvalue()),self.sample());self.assertNotIn(TOKEN,out.getvalue())
 
 if __name__=='__main__':unittest.main()
+
+
+class AssistantCompletionTests(unittest.TestCase):
+    def test_done_closes_stream_without_waiting_for_eof(self):
+        class Stream(io.BytesIO):
+            def readline(self, size=-1):
+                if self.tell() == len(self.getvalue()):
+                    raise AssertionError('Must not wait for EOF after done')
+                return super().readline(size)
+        stream = Stream(b'{"t":"text","text":"Answer"}\n{"t":"done"}\n')
+        with patch('urllib.request.build_opener') as opener:
+            opener.return_value.open.return_value = stream
+            self.assertEqual(list(a.AccountClient(TOKEN).ask('Question')), ['Answer'])
+        self.assertTrue(stream.closed)
+
+    def test_incomplete_stream_is_not_success(self):
+        with patch('urllib.request.build_opener') as opener:
+            opener.return_value.open.return_value = io.BytesIO(b'{"t":"text","text":"Partial"}\n')
+            with self.assertRaisesRegex(a.AccountError, 'incomplete'):
+                list(a.AccountClient(TOKEN).ask('Question'))
+
+    def test_invalid_utf8_is_a_controlled_error(self):
+        with patch('urllib.request.build_opener') as opener:
+            opener.return_value.open.return_value = io.BytesIO(b'\xff\n')
+            with self.assertRaisesRegex(a.AccountError, 'connection interrupted'):
+                list(a.AccountClient(TOKEN).ask('Question'))

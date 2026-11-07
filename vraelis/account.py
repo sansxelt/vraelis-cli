@@ -55,7 +55,7 @@ class AccountClient:
             if e.code == 401: raise AccountError('Session expired or revoked. Run vraelis login again.', 401) from None
             if e.code == 410: raise AccountError('This sign-in expired, was declined, cancelled or already collected. Start again.') from None
             raise AccountError(f'Account request failed ({e.code}). Try again; no payment was requested.') from None
-        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError):
+        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, UnicodeDecodeError):
             raise AccountError('Could not reach your account. Check your connection and try again.') from None
 
     def start(self):
@@ -100,12 +100,14 @@ class AccountClient:
                     if event.get('t') == 'text': yield terminal_text(str(event.get('text', '')))
                     elif event.get('t') == 'proposal': yield '\nReview proposed actions in the web app. Nothing was executed here.\n'
                     elif event.get('t') == 'error': raise AccountError(terminal_text(str(event.get('message', 'Assistant failed.'))))
-                    elif event.get('t') == 'done': done = True
+                    elif event.get('t') == 'done':
+                        done = True
+                        break
                 if not done: raise AccountError('Assistant response was interrupted and may be incomplete.')
         except urllib.error.HTTPError as e:
             if e.code == 402: raise AccountError('The command-line assistant requires Premium access and available allowance. Manage your plan in the browser.') from None
             raise AccountError(f'Assistant request failed ({e.code}).') from None
-        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError):
+        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, UnicodeDecodeError):
             raise AccountError('Assistant connection interrupted. No automatic retry was made.') from None
 
     def logout(self):
