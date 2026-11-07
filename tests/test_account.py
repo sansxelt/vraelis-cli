@@ -99,4 +99,22 @@ class AccountTests(unittest.TestCase):
         with patch.dict(os.environ,{'VRAELIS_TOKEN':TOKEN}),patch.object(a.AccountClient,'logout',return_value={'revoked':True}),patch.object(a.Credentials,'clear') as clear,contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(a.main(['logout']),0);clear.assert_not_called()
 
+class UsageTests(unittest.TestCase):
+    def sample(self):
+        return dict(state='ready', period={'start':'2026-11-01T00:00:00Z','end':'2026-12-01T00:00:00Z'}, used_percent=25, settled_calls=2, reserved_requests=1, input_tokens=10, output_tokens=5, cache_read_tokens=0, cache_creation_tokens=0, usage_billing=False, credits_available=False)
+    def test_usage_projects_public_fields(self):
+        c=a.AccountClient(TOKEN)
+        with patch.object(c,'_call',return_value={**self.sample(),'cost_cents':900,'token':'private'}) as call:
+            self.assertEqual(c.usage(),self.sample());call.assert_called_once_with('/api/account/usage')
+    def test_invalid_or_unavailable_never_zero(self):
+        c=a.AccountClient(TOKEN)
+        for field,value in [('used_percent',None),('used_percent',True),('used_percent',float('nan')),('period',None),('reserved_requests',-1),('usage_billing',True)]:
+            with self.subTest(field=field,value=value),patch.object(c,'_call',return_value={**self.sample(),field:value}),self.assertRaises(a.AccountError):c.usage()
+        with patch.object(c,'_call',side_effect=a.AccountError('Unavailable',503)),self.assertRaises(a.AccountError):c.usage()
+    def test_usage_command_json(self):
+        out=io.StringIO()
+        with patch.dict(os.environ,{'VRAELIS_TOKEN':TOKEN}),patch.object(a.AccountClient,'usage',return_value=self.sample()),contextlib.redirect_stdout(out):
+            self.assertEqual(a.main(['usage','--json']),0)
+        self.assertEqual(json.loads(out.getvalue()),self.sample());self.assertNotIn(TOKEN,out.getvalue())
+
 if __name__=='__main__':unittest.main()

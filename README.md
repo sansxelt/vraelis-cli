@@ -158,7 +158,7 @@ Licence: Apache-2.0 (LICENSE, NOTICE).
 
 ## Account access (0.1.3 source candidate)
 
-`vraelis login` opens browser approval; `vraelis login --no-browser` prints the approval address. Then use `vraelis account status`, `vraelis account billing`, or `vraelis assistant "Summarize my records"`. `vraelis logout` revokes the session. These commands work in CMD, PowerShell, and Unix shells when the installed command is available.
+`vraelis login` opens browser approval; `vraelis login --no-browser` prints the approval address. Then use `vraelis account status`, `vraelis account usage` (`--json` for structured output), `vraelis account billing`, or `vraelis assistant "Summarize my records"`. `vraelis logout` revokes the session. These commands work in CMD, PowerShell, and Unix shells when the installed command is available.
 
 Assistant requests require Premium or higher and available usage. They are temporary and cannot open saved conversations or execute proposals. Review actions in the web app. Billing opens browser settings; confirm the browser uses the same account. Offline lock/verify/diff commands still require no account.
 

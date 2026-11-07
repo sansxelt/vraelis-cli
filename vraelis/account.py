@@ -2,6 +2,8 @@
 import argparse
 import ctypes
 import json
+import math
+from datetime import datetime
 import os
 from pathlib import Path
 import platform
@@ -66,6 +68,20 @@ class AccountClient:
     def cancel(self, code): return self._call('/api/account/device/cancel', {'deviceCode': code}, False)
     def me(self): return self._call('/api/account/me')
     def entitlements(self): return self._call('/api/billing/entitlements')
+    def usage(self):
+        raw = self._call('/api/account/usage')
+        fields = ('used_percent', 'settled_calls', 'reserved_requests', 'input_tokens', 'output_tokens', 'cache_read_tokens', 'cache_creation_tokens')
+        period = raw.get('period')
+        valid = raw.get('state') == 'ready' and raw.get('usage_billing') is False and raw.get('credits_available') is False
+        valid = valid and all(type(raw.get(k)) in (int, float) and math.isfinite(raw[k]) and raw[k] >= 0 for k in fields)
+        try:
+            if not isinstance(period, dict): raise ValueError()
+            for key in ('start', 'end'): datetime.fromisoformat(period[key])
+        except (ValueError, TypeError, KeyError): valid = False
+        if not valid: raise AccountError('Account usage is unavailable. It is not being reported as zero.')
+        return {'state': 'ready', 'period': {k: period[k] for k in ('start', 'end')},
+                **{k: raw[k] for k in fields}, 'usage_billing': False, 'credits_available': False}
+
     def ask(self, message):
         if not message.strip() or len(message) > 4000:
             raise AccountError('Ask a question of at most 4,000 characters.')
@@ -237,7 +253,7 @@ def login(store, no_browser=False, client=None, sleep=time.sleep, now=time.monot
 
 def main(argv=None):
     parser = argparse.ArgumentParser(prog='vraelis account')
-    parser.add_argument('action', choices=['login', 'logout', 'status', 'billing', 'ask'])
+    parser.add_argument('action', choices=['login', 'logout', 'status', 'usage', 'billing', 'ask'])
     parser.add_argument('--no-browser', action='store_true')
     parser.add_argument('--json', action='store_true')
     parser.add_argument('message', nargs='?')
@@ -253,6 +269,14 @@ def main(argv=None):
         env = os.environ.get('VRAELIS_TOKEN'); token = env or store.load()
         if not token: raise AccountError('Not signed in. Run vraelis login.')
         c = AccountClient(token)
+        if args.action == 'usage':
+            usage = c.usage()
+            if args.json: print(json.dumps(usage, indent=2))
+            else:
+                print(f"Assistant usage: {usage['used_percent']:g}% (includes pending reservations)")
+                print(f"Completed calls: {usage['settled_calls']:g}; pending requests: {usage['reserved_requests']:g}")
+                print('This is not a credit balance or an amount owed.')
+            return 0
         if args.action == 'ask':
             if not args.message: raise AccountError('Usage: vraelis assistant "your question"')
             for text in c.ask(args.message): print(text, end='', flush=True)
