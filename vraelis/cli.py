@@ -8,7 +8,7 @@ import sys
 
 from . import __version__
 
-USAGE = """usage: vraelis {models,agents,login,logout,account} ...
+USAGE = """usage: vraelis {models,agents,login,logout,account,assistant} ...
 
   vraelis models lock|verify|diff|signature   pin and verify the exact bytes of an AI model folder (offline;
                                               `signature` is optional and contacts Sigstore)
