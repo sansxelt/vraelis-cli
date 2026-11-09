@@ -167,3 +167,7 @@ Windows stores the session encrypted with user-bound DPAPI; Unix uses an owner-o
 ## Optional CI reporting (development)
 
 Submit minimized model verification results separately from the offline check. See [CI reporting](docs/ci-reporting.md) for privacy, token scope, failure handling and a workflow example. This command is not in the published 0.1.2 binaries.
+
+## Bulk model verification (development)
+
+Use `vraelis models verify-many FOLDER... --json` to check several model folders offline. Each keeps its own lockfile and result. See [bulk verification](docs/bulk-verification.md) for exit codes, output and Windows examples.

@@ -45,7 +45,12 @@ def prepare(root):
         assert all(set(change) == {"file", "change"} for change in preview["result"]["changes"])
 
     (root / "verification.json").write_text(json.dumps(outcomes, indent=2), encoding="utf-8")
+    bulk = command("models", "verify-many", str(model), str(root / "missing-model"), "--json")
+    batch = json.loads(bulk.stdout)
+    assert bulk.returncode == 2 and batch["summary"] == {"total": 2, "UNCHANGED": 0, "CHANGED": 1, "CANT_VERIFY": 1}, "Bulk check lost a failure or change"
+    (root / "batch.json").write_text(bulk.stdout, encoding="utf-8")
     print("Installed CLI: UNCHANGED=0, CHANGED=1, CANT_VERIFY=2 confirmed.")
+    print("Installed bulk verification: changed and uncheckable folders retained; aggregate exit=2.")
 
 
 def submit(root, run_id):

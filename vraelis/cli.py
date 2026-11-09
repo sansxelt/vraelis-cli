@@ -15,6 +15,8 @@ USAGE = """usage: vraelis {models,agents,login,logout,account,assistant,report} 
   vraelis agents lock|verify|diff             pin and verify an AI coding agent's add-on configuration (offline;
                                               never launches anything)
 
+  vraelis models verify-many FOLDER... [--json] check several model folders (offline)
+
   vraelis report --file result.json --name NAME  submit model results (network; report token required)
 
   vraelis login [--no-browser]                 approve this CLI in your browser

@@ -2,6 +2,9 @@
 
 ## 0.1.3 (source candidate)
 
+- Offline `models verify-many` checks up to 256 explicitly selected folders, preserving per-folder results and aggregate CI exit codes.
+- Explicit minimized model reporting for CI, with token-free `--dry-run` previews and safe machine-readable delivery errors. Successful real-account submission remains a release gate.
+
 - Browser-approved CLI sign-in, account status, plan access, logout and billing settings link.
 - Temporary assistant questions with server-enforced native plan limits; no saved-thread or automatic action execution.
 - Windows credentials encrypted with user-bound DPAPI; private credential files on Unix.
