@@ -24,6 +24,10 @@ jobs:
         run: python -m pip install .
       - name: Installed verification outcomes (offline)
         run: python -I scripts/ci_report_acceptance.py prepare --directory "${{ runner.temp }}/report-acceptance"
+      - name: Verify live authentication refusal (no account credential)
+        if: runner.os == 'Linux'
+        timeout-minutes: 1
+        run: python -I scripts/ci_report_acceptance.py reject --directory "${{ runner.temp }}/report-acceptance" --run-id "${{ github.run_id }}-${{ github.run_attempt }}"
       - name: Submit real-account reports (Linux only)
         if: runner.os == 'Linux'
         timeout-minutes: 3

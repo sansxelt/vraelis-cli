@@ -63,6 +63,14 @@ def submit(root, run_id):
         assert response == {"ok": True, "source": "client-reported", "compared": False}
         accepted.append(name)
         print(f"{name}: report accepted; client-reported, not server-compared.")
+    reject(root, run_id)
+    (root / "reporting.json").write_text(json.dumps({"accepted": accepted,
+        "rejected_upload_exit": 2, "changed_verification_exit": 1}, indent=2), encoding="utf-8")
+    print("Rejected upload=2; stored changed verification remains 1.")
+
+
+def reject(root, run_id):
+    outcomes = json.loads((root / "verification.json").read_text(encoding="utf-8"))
     # A syntactically valid but deliberately invalid token exercises actual 401 handling.
     environment = dict(os.environ, VRAELIS_REPORT_TOKEN="vrc_" + "0" * 64)
     rejected = command("report", "--file", str(root / "changed.json"),
@@ -71,14 +79,12 @@ def submit(root, run_id):
     assert json.loads(rejected.stdout).get("error") == "invalid_token", "Expected a token refusal, not a network failure"
     assert outcomes["changed"]["exit"] == 1
     assert json.loads((root / "verification.json").read_text(encoding="utf-8")) == outcomes
-    (root / "reporting.json").write_text(json.dumps({"accepted": accepted,
-        "rejected_upload_exit": 2, "changed_verification_exit": 1}, indent=2), encoding="utf-8")
-    print("Rejected upload=2; stored changed verification remains 1.")
+    print("Live API rejected the invalid token; verification outcome unchanged.")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("action", choices=("prepare", "submit"))
+    parser.add_argument("action", choices=("prepare", "submit", "reject"))
     parser.add_argument("--directory", required=True, type=Path)
     parser.add_argument("--run-id", default="local")
     args = parser.parse_args()
@@ -87,6 +93,8 @@ if __name__ == "__main__":
     try:
         if args.action == "prepare":
             prepare(args.directory)
+        elif args.action == "reject":
+            reject(args.directory, args.run_id)
         else:
             submit(args.directory, args.run_id)
     except Exception as exc:
