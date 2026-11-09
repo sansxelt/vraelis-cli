@@ -34,3 +34,23 @@ never on a pull-request event. A green Linux result establishes API acceptance;
 confirm the three named records in the account's reports view separately before
 claiming account-visible end-to-end acceptance. The report-only credential cannot
 read records. Windows/macOS offline success alone does not establish live delivery.
+
+## Preview and diagnose
+
+Before configuring credentials, inspect the exact upload locally:
+
+```
+vraelis report --file result.json --name my-model --dry-run
+```
+
+This emits the minimized JSON payload and makes no network request. No account or
+token is needed. Its exit code describes input validation, not report acceptance.
+The output still contains relative filenames; do not publish it blindly.
+
+Use `--json` on a real submission to receive stable failure codes:
+`missing_token`, `invalid_token`, `access_denied`, `plan_limit`, `rate_limited`,
+`report_too_large`, `redirect_refused`, `server_error`, `timeout`,
+`delivery_unconfirmed`, or `invalid_input`. All failures exit 2. Remote response
+bodies and credentials are never echoed. `timeout`, `delivery_unconfirmed` and
+server errors do not prove the server failed to save the report; inspect account
+history before manually retrying.

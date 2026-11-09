@@ -72,6 +72,37 @@ class Reporting(unittest.TestCase):
             self.assertEqual(report.main(['--file','absent','--name','model']), 2)
             send.assert_not_called()
 
+    def test_dry_run_has_no_credentials_or_network(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = os.path.join(folder, "result.json")
+            with open(path, "w") as f:
+                json.dump({"verdict":"CANT_VERIFY", "changes":[], "reason":"private-path"}, f)
+            out = io.StringIO()
+            with patch.dict(os.environ, {}, clear=True), patch.object(report, 'send') as send, redirect_stdout(out):
+                self.assertEqual(report.main(['--file',path,'--name','model','--dry-run']), 0)
+            send.assert_not_called()
+            self.assertEqual(json.loads(out.getvalue()), {"name":"model","result":{"verdict":"CANT_VERIFY","changes":[]}})
+            self.assertNotIn('private-path', out.getvalue())
+
+    def test_safe_http_diagnostics(self):
+        for status, expected in ((401,'invalid_token'),(402,'plan_limit'),(403,'access_denied'),(429,'rate_limited'),(503,'server_error'),(302,'redirect_refused')):
+            with self.subTest(status=status), patch.object(report.urllib.request, 'build_opener') as factory:
+                factory.return_value.open.side_effect = urllib.error.HTTPError(report.ENDPOINT,status,'secret-server-message',{},None)
+                with self.assertRaises(report.ReportError) as error:
+                    report.send(b'{}', 'vrc_secret')
+                self.assertEqual(error.exception.code, expected)
+                self.assertNotIn('secret', str(error.exception))
+
+    def test_json_failure_is_machine_readable(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = os.path.join(folder, 'result.json')
+            with open(path, 'w') as f: json.dump({"verdict":"UNCHANGED","changes":[]}, f)
+            out, err = io.StringIO(), io.StringIO()
+            with patch.dict(os.environ, {}, clear=True), redirect_stdout(out), redirect_stderr(err):
+                self.assertEqual(report.main(['--file',path,'--name','model','--json']), 2)
+            self.assertEqual(json.loads(out.getvalue())['error'], 'missing_token')
+            self.assertEqual(err.getvalue(), '')
+
     def test_deadline(self):
         with patch.object(report.threading, 'Thread'), patch.object(report.queue.Queue, 'get', side_effect=report.queue.Empty):
             with self.assertRaises(ValueError): report.send(b'{}', 'token')

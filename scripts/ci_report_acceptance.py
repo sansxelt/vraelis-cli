@@ -35,6 +35,15 @@ def prepare(root):
         assert result.returncode == code and document["verdict"] == verdict, "Wrong verification outcome"
         (root / (name + ".json")).write_text(result.stdout, encoding="utf-8")
         outcomes[name] = {"exit": result.returncode, "verdict": document["verdict"]}
+        environment = {key: value for key, value in os.environ.items() if key != "VRAELIS_REPORT_TOKEN"}
+        dry = command("report", "--file", str(root / (name + ".json")), "--name", "acceptance-preview", "--dry-run", env=environment)
+        assert dry.returncode == 0, "Token-free dry run failed"
+        preview = json.loads(dry.stdout)
+        assert set(preview) == {"name", "result"}
+        assert set(preview["result"]) == {"verdict", "changes"}
+        assert preview["result"]["verdict"] == verdict
+        assert all(set(change) == {"file", "change"} for change in preview["result"]["changes"])
+
     (root / "verification.json").write_text(json.dumps(outcomes, indent=2), encoding="utf-8")
     print("Installed CLI: UNCHANGED=0, CHANGED=1, CANT_VERIFY=2 confirmed.")
 
@@ -57,8 +66,9 @@ def submit(root, run_id):
     # A syntactically valid but deliberately invalid token exercises actual 401 handling.
     environment = dict(os.environ, VRAELIS_REPORT_TOKEN="vrc_" + "0" * 64)
     rejected = command("report", "--file", str(root / "changed.json"),
-                       "--name", f"cli-acceptance-{run_id}-rejected", env=environment)
+                       "--name", f"cli-acceptance-{run_id}-rejected", "--json", env=environment)
     assert rejected.returncode == 2, "Rejected upload must exit 2"
+    assert json.loads(rejected.stdout).get("error") == "invalid_token", "Expected a token refusal, not a network failure"
     assert outcomes["changed"]["exit"] == 1
     assert json.loads((root / "verification.json").read_text(encoding="utf-8")) == outcomes
     (root / "reporting.json").write_text(json.dumps({"accepted": accepted,
