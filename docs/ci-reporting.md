@@ -18,3 +18,19 @@ Reports are client-reported assertions, not server comparisons. Submission consu
 The command uses one HTTPS request to `https://data.vraelis.com/api/prompto/report`, without redirects, automatic retries or ambient proxy settings. Input and payload are limited to 4 MiB, changes to 10,000, response to 64 KiB. Socket inactivity timeout is 15 seconds; the CLI waits at most 30 seconds for transport. After a timeout or connection failure the server may already have saved the report. Delivery is uncertain; do not assume a retry is duplicate-free.
 
 See `examples/model-check.yml` for separate verification and optional reporting steps. Adapt the model directory and install an approved CLI wheel before using it. Neither examples nor mocked transport tests establish real-account acceptance; that remains a release gate.
+
+## Release acceptance
+
+`.github/workflows/report-acceptance.yml` installs this revision on Windows,
+macOS and Linux and produces actual model verification artifacts for all three
+verdicts. On Linux it additionally submits three clearly named
+`cli-acceptance-<run>-<case>` reports to the account identified by the repository
+secret `VRAELIS_REPORT_TOKEN`, then checks rejected-upload behavior. These records
+are real writes and can trigger configured account alerts. Do not use the shared
+review account. A missing secret fails the live gate explicitly.
+
+The workflow runs only on manual dispatch or the trusted development branch,
+never on a pull-request event. A green Linux result establishes API acceptance;
+confirm the three named records in the account's reports view separately before
+claiming account-visible end-to-end acceptance. The report-only credential cannot
+read records. Windows/macOS offline success alone does not establish live delivery.
