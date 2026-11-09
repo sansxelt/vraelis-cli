@@ -8,12 +8,16 @@ import sys
 
 from . import __version__
 
-USAGE = """usage: vraelis {models,agents,login,logout,account,assistant} ...
+USAGE = """usage: vraelis {models,agents,login,logout,account,assistant,report} ...
 
   vraelis models lock|verify|diff|signature   pin and verify the exact bytes of an AI model folder (offline;
                                               `signature` is optional and contacts Sigstore)
   vraelis agents lock|verify|diff             pin and verify an AI coding agent's add-on configuration (offline;
                                               never launches anything)
+
+  vraelis models verify-many FOLDER... [--json] check several model folders (offline)
+
+  vraelis report --file result.json --name NAME  submit model results (network; report token required)
 
   vraelis login [--no-browser]                 approve this CLI in your browser
   vraelis logout                              revoke this CLI session
@@ -35,6 +39,9 @@ def main(argv=None):
     if tool in ("login", "logout", "account", "assistant"):
         from . import account
         return account.main(rest if tool == "account" else ["ask" if tool == "assistant" else tool, *rest])
+    if tool == "report":
+        from . import report
+        return report.main(rest)
     if tool == "models":
         from .models import cli as models_cli
         return models_cli.main(rest)

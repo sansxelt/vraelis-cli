@@ -40,6 +40,9 @@ def main(argv=None):
     p.add_argument("--json", action="store_true")
     v = sub.add_parser("verify", help="compare a model folder with its lockfile")
     v.add_argument("folder"); v.add_argument("--lockfile"); v.add_argument("--json", action="store_true")
+    many = sub.add_parser("verify-many", help="check up to 256 model folders offline without changing their lockfiles")
+    many.add_argument("folders", nargs="+")
+    many.add_argument("--json", action="store_true", help="emit per-folder results and an aggregate summary")
     g = sub.add_parser("signature", help="NETWORKED, optional: check the publisher's Sigstore signature with model_signing")
     g.add_argument("folder"); g.add_argument("--identity", required=True, help="expected signer identity (e.g. an email or workflow URL)")
     g.add_argument("--issuer", required=True, help="expected OIDC issuer URL"); g.add_argument("--signature", help="signature file (default: model.sig in the folder)")
@@ -47,6 +50,17 @@ def main(argv=None):
     d = sub.add_parser("diff", help="compare two lockfiles")
     d.add_argument("lock_a"); d.add_argument("lock_b"); d.add_argument("--json", action="store_true")
     a = ap.parse_args(argv)
+
+    if a.cmd == "verify-many":
+        from . import batch
+        if len(a.folders) > batch.MAX_FOLDERS:
+            ap.error("verify-many accepts at most 256 folders")
+        document = batch.verify_many(a.folders)
+        if a.json:
+            print(json.dumps(document, indent=1, sort_keys=True))
+        else:
+            batch.display(document)
+        return batch.EXIT[document["verdict"]]
 
     if a.cmd == "lock":
         try: doc = core.lock(a.folder, source=a.source)

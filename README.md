@@ -163,3 +163,11 @@ Licence: Apache-2.0 (LICENSE, NOTICE).
 Assistant requests require Premium or higher and available usage. They are temporary and cannot open saved conversations or execute proposals. Review actions in the web app. Billing opens browser settings; confirm the browser uses the same account. Offline lock/verify/diff commands still require no account.
 
 Windows stores the session encrypted with user-bound DPAPI; Unix uses an owner-only credential file. An optional `VRAELIS_TOKEN` overrides saved credentials without replacing them. Never put tokens in command arguments or logs. This source candidate is not a restored Windows download.
+
+## Optional CI reporting (development)
+
+Submit minimized model verification results separately from the offline check. See [CI reporting](docs/ci-reporting.md) for privacy, token scope, failure handling and a workflow example. This command is not in the published 0.1.2 binaries.
+
+## Bulk model verification (development)
+
+Use `vraelis models verify-many FOLDER... --json` to check several model folders offline. Each keeps its own lockfile and result. See [bulk verification](docs/bulk-verification.md) for exit codes, output and Windows examples.
